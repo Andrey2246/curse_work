@@ -7,7 +7,7 @@ import (
 
 func main() {
 	// Create Fyne app
-	a := app.NewWithID("12312312313123")
+	a := app.NewWithID("shadow2246.cursework.third.semester")
 	w := a.NewWindow("ShieldCloud")
 
 	// Launch the GUI
