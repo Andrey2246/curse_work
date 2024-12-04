@@ -1,4 +1,4 @@
-package DES
+package encryption
 
 import (
 	"fmt"
@@ -139,59 +139,47 @@ var FPTable = []int{
 // Number of left shifts for each round
 var LeftShifts = [16]int{1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1}
 
-func addDESPadding(a []int) []int {
-	if len(a)%64 != 0 { // iso padding
-		addByte := make([]int, 8)
-		need := len(a) % 64
-		for i := 0; need > 0; i++ {
-			addByte[8-i] = need % 2
-			need /= 2
-		}
-		for i := 0; i < (len(a)%64)/8; i++ {
-			a = append(a, addByte...)
-		}
+func RuneToBin(input rune) []int {
+	inNum := int(input)
+	result := make([]int, 16)
+	for i := 15; inNum > 0; i-- {
+		result[i] = inNum % 2
+		inNum = inNum / 2
+	}
+	return result
+}
+
+func addDESPadding(a []byte) []byte {
+	prop := byte(len(a) % 8)
+	for i := 0; len(a)%8 != 0; i++ {
+		a = append(a, prop)
 	}
 	return a
 }
 
 func StrToBin(a string) []int {
-	result := make([]int, len(a)*16)
+	result := make([]int, 0)
 	for _, c := range a {
 		bin := RuneToBin(c)
+		if len(bin) == 8 {
+			result = append(result, bin...)
+		}
 		result = append(result, bin...)
 	}
 
 	return result
 }
 
-func pow(x, y int) int {
-	result := 1
-	for i := 0; i < x; i++ {
-		result *= y
-	}
-	return result
-}
-
-func removeDESPadding(a []int) []int {
-	for i := 0; i < 8; i++ {
-		if a[len(a)-i] != a[len(a)-8-i] {
-			return a //no padding
+func removeDESPadding(a []byte) []byte {
+	prop := a[len(a)-1]
+	realSize := len(a) - 1
+	for i := 0; i <= int(prop); i++ {
+		if a[len(a)-i-1] != prop {
+			return a
 		}
+		realSize -= 1
 	}
-	n := 0
-	for i := 0; i < 8; i++ {
-		n += a[len(a)-8-i] * int(pow(2, i))
-	}
-	a = a[:n]
-	return a
-}
-
-func BinToStr(a []int) string {
-	result := ""
-	for i := 0; i < len(a); i += 16 {
-		result += string(BinToRune(a[i : i+16]))
-	}
-	return result
+	return a[:realSize]
 }
 
 func permute(input []int, table []int) []int {
@@ -257,40 +245,80 @@ func feistel(right []int, roundKey []int) []int {
 	return permute(substituted, PermutationTable)
 }
 
-func mainDES(text string, roundKeys [][]int) []int {
-	blocks := StrToBin(text)
-	cyphertext := make([]int, len(blocks))
-	for i := 0; i < len(blocks); i += 64 {
-		block := blocks[i : i+64]
-		permutedBlock := permute(block, IPTable) // начальная перестановка
+func mainDES(block []int, roundKeys [][]int) []int {
+	permutedBlock := permute(block, IPTable) // начальная перестановка
 
-		left, right := permutedBlock[:32], permutedBlock[32:]
-		left = feistel(left, roundKeys[0])
+	left, right := permutedBlock[:32], permutedBlock[32:]
 
-		for i := 0; i < 16; i++ {
-			temp := right
-			right = xor(left, feistel(right, roundKeys[i]))
-			left = temp
-		}
-
-		combined := append(right, left...)
-		combined = permute(combined, FPTable)
-		cyphertext = append(cyphertext, combined...)
+	for i := 0; i < 16; i++ {
+		temp := right
+		right = xor(left, feistel(right, roundKeys[i]))
+		left = temp
 	}
-	return cyphertext
+
+	combined := append(right, left...)
+	return permute(combined, FPTable)
+
 }
 
-func EncryptDES(text, key string) []int {
-	roundKeys := generateRoundKeys(StrToBin(key))
-	return mainDES(text, roundKeys)
+func ByteToBinarySlice(b byte) []int {
+	binary := make([]int, 8) // A byte has 8 bits
+	for i := 0; i < 8; i++ {
+		// Extract each bit, starting from the most significant bit
+		binary[7-i] = int((b >> i) & 1)
+	}
+	return binary
 }
 
-func DecryptDES(text, key string) []int {
-	roundKeys := generateRoundKeys(StrToBin(key))
+func ByteSToBinS(bytes []byte) []int {
+	binary := make([]int, 0)
+	for _, b := range bytes {
+		binary = append(binary, ByteToBinarySlice(b)...)
+	}
+	return binary
+}
+
+func BinarySliceToByte(binary []int) byte {
+	var b byte
+	for i, bit := range binary {
+		b |= byte(bit) << (7 - i)
+	}
+	return b
+}
+
+func BinSToByteS(bins []int) []byte {
+	bytes := make([]byte, 0)
+	for i := 0; i < len(bins); i += 8 {
+		bytes = append(bytes, BinarySliceToByte(bins[i:i+8]))
+	}
+	return bytes
+}
+
+func EncryptDES(plaintext []byte, key string) []byte {
+	text := ByteSToBinS(addDESPadding(plaintext))
+
+	roundkeys := generateRoundKeys(StrToBin(key))
+
+	cyphertext := make([]int, 0)
+	for i := 0; i < len(text); i += 64 {
+		cyphertext = append(cyphertext, mainDES(text[i:i+64], roundkeys)...)
+	}
+	return BinSToByteS(cyphertext)
+}
+
+func DecryptDES(ciphertext []byte, key string) []byte {
+	text := ByteSToBinS(ciphertext)
+
+	roundkeys := generateRoundKeys(StrToBin(key))
 
 	reversedKeys := make([][]int, 16)
 	for i := 0; i < 16; i++ {
-		reversedKeys[i] = roundKeys[15-i]
+		reversedKeys[i] = roundkeys[15-i]
 	}
-	return mainDES(text, roundKeys)
+
+	cyphertext := make([]int, 0)
+	for i := 0; i < len(text); i += 64 {
+		cyphertext = append(cyphertext, mainDES(text[i:i+64], reversedKeys)...)
+	}
+	return removeDESPadding(BinSToByteS(cyphertext))
 }
