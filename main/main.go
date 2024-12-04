@@ -2,6 +2,7 @@ package main
 
 import (
 	"curse_work/gui"
+	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 )
 
@@ -13,5 +14,7 @@ func main() {
 	// Launch the GUI
 	gui.Initialize(w)
 
+	w.Resize(fyne.NewSize(400, 300))
+	w.CenterOnScreen()
 	w.ShowAndRun()
 }

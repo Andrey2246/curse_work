@@ -32,8 +32,8 @@ func UploadFileDialog(w fyne.Window) {
 			}
 
 			key := keyEntry.Text
-			if len(key) != 4 {
-				dialog.ShowError(fmt.Errorf("Key must be 4 characters"), w)
+			if len(key) <= 4 {
+				dialog.ShowError(fmt.Errorf("Key must be at least 4 characters"), w)
 				return
 			}
 
