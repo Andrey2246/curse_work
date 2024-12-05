@@ -5,7 +5,7 @@ import (
 )
 
 // Permutation Table
-var IPTable = []int{
+const IPTable = []int{
 	58, 50, 42, 34, 26, 18, 10, 2,
 	60, 52, 44, 36, 28, 20, 12, 4,
 	62, 54, 46, 38, 30, 22, 14, 6,
@@ -16,7 +16,7 @@ var IPTable = []int{
 	63, 55, 47, 39, 31, 23, 15, 7,
 }
 
-var IPInvTable = []int{
+const IPInvTable = []int{
 	40, 8, 48, 16, 56, 24, 64, 32,
 	39, 7, 47, 15, 55, 23, 63, 31,
 	38, 6, 46, 14, 54, 22, 62, 30,
@@ -27,7 +27,7 @@ var IPInvTable = []int{
 	33, 1, 41, 9, 49, 17, 57, 25,
 }
 
-var ExpansionTable = []int{
+const ExpansionTable = []int{
 	32, 1, 2, 3, 4, 5,
 	4, 5, 6, 7, 8, 9,
 	8, 9, 10, 11, 12, 13,
@@ -38,14 +38,14 @@ var ExpansionTable = []int{
 	28, 29, 30, 31, 32, 1,
 }
 
-var PermutationTable = []int{
+const PermutationTable = []int{
 	16, 7, 20, 21, 29, 12, 28, 17,
 	1, 15, 23, 26, 5, 18, 31, 10,
 	2, 8, 24, 14, 32, 27, 3, 9,
 	19, 13, 30, 6, 22, 11, 4, 25,
 }
 
-var SBox = [8][4][16]int{
+const SBox = [8][4][16]int{
 	// S-Box 1
 	{
 		{14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7},
@@ -104,7 +104,7 @@ var SBox = [8][4][16]int{
 	},
 }
 
-var PC1 = []int{
+const PC1 = []int{
 	57, 49, 41, 33, 25, 17, 9,
 	1, 58, 50, 42, 34, 26, 18,
 	10, 2, 59, 51, 43, 35, 27,
@@ -116,7 +116,7 @@ var PC1 = []int{
 }
 
 // Permuted Choice 2 (PC-2) - reduces 56-bit key to 48 bits for each subkey
-var PC2 = []int{
+const PC2 = []int{
 	14, 17, 11, 24, 1, 5, 3, 28,
 	15, 6, 21, 10, 23, 19, 12, 4,
 	26, 8, 16, 7, 27, 20, 13, 2,
@@ -125,7 +125,7 @@ var PC2 = []int{
 	34, 53, 46, 42, 50, 36, 29, 32,
 }
 
-var FPTable = []int{
+const FPTable = []int{
 	40, 8, 48, 16, 56, 24, 64, 32,
 	39, 7, 47, 15, 55, 23, 63, 31,
 	38, 6, 46, 14, 54, 22, 62, 30,
@@ -137,7 +137,7 @@ var FPTable = []int{
 }
 
 // Number of left shifts for each round
-var LeftShifts = [16]int{1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1}
+const LeftShifts = [16]int{1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1}
 
 func RuneToBin(input rune) []int {
 	inNum := int(input)
