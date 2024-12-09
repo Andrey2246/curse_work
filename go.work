@@ -4,5 +4,4 @@ use (
 	./encryption
 	./gui
 	./main
-	./network
 )
