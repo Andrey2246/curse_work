@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-const serverURL = "http://localhost:8080"
+const serverURL = "http://147.45.197.224:8080"
 
 func UploadFile(filename string, data []byte, uploader string) error {
 	body := &bytes.Buffer{}

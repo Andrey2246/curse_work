@@ -12,7 +12,7 @@ func main() {
 	w := a.NewWindow("ShieldCloud")
 
 	// Launch the GUI
-	gui.Initialize(w)
+	gui.MainMenu(w)
 
 	w.Resize(fyne.NewSize(400, 300))
 	w.CenterOnScreen()
