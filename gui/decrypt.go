@@ -16,32 +16,14 @@ func DecryptFile(data *[]byte, key *string, w fyne.Window) {
 			return
 		}
 		defer uri.Close()
-		encrypted := encryption.EncryptDES(*data, *key)
+		encrypted := encryption.DecryptDES(*data, *key)
 		_, err = uri.Write(encrypted)
 		if err != nil {
 			dialog.ShowError(err, w)
 			return
 		}
-	}, w) /*
-		dialog.ShowFolderOpen(func(dir fyne.ListableURI, err error) {
-			encrypted := encryption.EncryptDES(*data, *key)
-			if err != nil {
-				dialog.ShowError(err, w)
-				return
-			}
-			file, err := os.Create(dir.Path() + "/" + *filename)
-			if err != nil {
-				dialog.ShowError(err, w)
-				return
-			}
-			defer file.Close()
-			_, err = file.Write(encrypted)
-			if err != nil {
-				dialog.ShowError(err, w)
-				return
-			}
-			dialog.ShowInformation("Success", "File saved successfully to location: \n"+dir.Path()+*filename+".", w)
-		}, w)*/
+		dialog.ShowInformation("File Saved", "File saved to "+uri.URI().Path(), w)
+	}, w)
 }
 
 func DecryptDialog(w fyne.Window) {
@@ -56,18 +38,17 @@ func DecryptDialog(w fyne.Window) {
 		return
 	}
 	keyEntry.SetText(key)
-	dialog.ShowCustomConfirm("Enter Encryption Key", "OK", "Cancel", keyEntry, func(confirm bool) {
+	dialog.ShowCustomConfirm("Enter Decryption Key", "OK", "Cancel", keyEntry, func(confirm bool) {
 		if !confirm {
 			return
 		}
 		key := keyEntry.Text
-		if len(key) <= 4 {
-			dialog.ShowError(fmt.Errorf("Key must be at least 4 characters"), w)
+		if len(key) <= 7 {
+			dialog.ShowError(fmt.Errorf("Key must be at least 8 characters"), w)
 			return
 		}
 
-		////////
-		dialog.ShowConfirm("Plaintext location", "Enter text from keyboard?",
+		dialog.ShowConfirm("Cyphertext location", "Enter text from keyboard?",
 			func(ok bool) {
 				if ok {
 					//prompt for file name
@@ -91,6 +72,9 @@ func DecryptDialog(w fyne.Window) {
 							return
 						}
 						defer reader.Close()
+						if data == nil {
+							return
+						}
 						DecryptFile(&data, &key, w)
 					}, w)
 				}

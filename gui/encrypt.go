@@ -37,26 +37,8 @@ func EncryptFile(data *[]byte, key *string, w fyne.Window) {
 			dialog.ShowError(err, w)
 			return
 		}
-	}, w) /*
-		dialog.ShowFolderOpen(func(dir fyne.ListableURI, err error) {
-			encrypted := encryption.EncryptDES(*data, *key)
-			if err != nil {
-				dialog.ShowError(err, w)
-				return
-			}
-			file, err := os.Create(dir.Path() + "/" + *filename)
-			if err != nil {
-				dialog.ShowError(err, w)
-				return
-			}
-			defer file.Close()
-			_, err = file.Write(encrypted)
-			if err != nil {
-				dialog.ShowError(err, w)
-				return
-			}
-			dialog.ShowInformation("Success", "File saved successfully to location: \n"+dir.Path()+*filename+".", w)
-		}, w)*/
+		dialog.ShowInformation("File Saved", "File saved to "+uri.URI().Path(), w)
+	}, w)
 }
 
 func EncryptDialog(w fyne.Window) {
@@ -76,8 +58,8 @@ func EncryptDialog(w fyne.Window) {
 			return
 		}
 		key := keyEntry.Text
-		if len(key) <= 4 {
-			dialog.ShowError(fmt.Errorf("Key must be at least 4 characters"), w)
+		if len(key) <= 7 {
+			dialog.ShowError(fmt.Errorf("Key must be at least 8 characters"), w)
 			return
 		}
 
@@ -106,6 +88,9 @@ func EncryptDialog(w fyne.Window) {
 							return
 						}
 						defer reader.Close()
+						if data == nil {
+							return
+						}
 						EncryptFile(&data, &key, w)
 					}, w)
 				}
