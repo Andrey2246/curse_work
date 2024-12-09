@@ -17,6 +17,9 @@ func DecryptFile(data *[]byte, key *string, w fyne.Window) {
 		}
 		defer uri.Close()
 		encrypted := encryption.DecryptDES(*data, *key)
+		for i := len(encrypted) - 1; encrypted[i] < 7; i-- {
+			encrypted = encrypted[:i]
+		}
 		_, err = uri.Write(encrypted)
 		if err != nil {
 			dialog.ShowError(err, w)
@@ -60,6 +63,9 @@ func DecryptDialog(w fyne.Window) {
 							}
 							DecryptFile(&data, &key, w)
 						}, w)
+					if data == nil {
+						return
+					}
 				} else {
 					dialog.ShowFileOpen(func(reader fyne.URIReadCloser, err error) {
 						if err != nil || reader == nil {

@@ -32,6 +32,9 @@ func EncryptFile(data *[]byte, key *string, w fyne.Window) {
 		}
 		defer uri.Close()
 		encrypted := encryption.EncryptDES(*data, *key)
+		for i := len(encrypted) - 1; encrypted[i] < 7; i-- {
+			encrypted = encrypted[:i]
+		}
 		_, err = uri.Write(encrypted)
 		if err != nil {
 			dialog.ShowError(err, w)
@@ -62,8 +65,6 @@ func EncryptDialog(w fyne.Window) {
 			dialog.ShowError(fmt.Errorf("Key must be at least 8 characters"), w)
 			return
 		}
-
-		////////
 		dialog.ShowConfirm("Plaintext location", "Enter text from keyboard?",
 			func(ok bool) {
 				if ok {
@@ -76,6 +77,9 @@ func EncryptDialog(w fyne.Window) {
 							}
 							EncryptFile(&data, &key, w)
 						}, w)
+					if data == nil {
+						return
+					}
 				} else {
 					dialog.ShowFileOpen(func(reader fyne.URIReadCloser, err error) {
 						if err != nil || reader == nil {

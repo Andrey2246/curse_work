@@ -14,7 +14,7 @@ func main() {
 	// Launch the GUI
 	gui.MainMenu(w)
 
-	w.Resize(fyne.NewSize(400, 300))
+	w.Resize(fyne.NewSize(800, 600))
 	w.CenterOnScreen()
 	w.ShowAndRun()
 }
