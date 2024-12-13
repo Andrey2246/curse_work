@@ -15,6 +15,10 @@ func DecryptFile(data *[]byte, key *string, w fyne.Window) {
 			dialog.ShowError(err, w)
 			return
 		}
+		if uri == nil {
+			dialog.ShowInformation("No File Selected", "Cancelled", w)
+			return
+		}
 		defer uri.Close()
 		encrypted := encryption.DecryptDES(*data, *key)
 		for i := len(encrypted) - 1; encrypted[i] < 7; i-- {
@@ -42,6 +46,7 @@ func DecryptDialog(w fyne.Window) {
 	}
 	keyEntry.SetText(key)
 	dialog.ShowCustomConfirm("Enter Decryption Key", "OK", "Cancel", keyEntry, func(confirm bool) {
+
 		if !confirm {
 			return
 		}
@@ -56,7 +61,7 @@ func DecryptDialog(w fyne.Window) {
 				if ok {
 					//prompt for file name
 					text := widget.NewMultiLineEntry()
-					dialog.ShowForm("Enter file contents", "OK", "Cancel", []*widget.FormItem{{Text: "Text", Widget: text}},
+					d := dialog.NewForm("Enter file contents", "OK", "Cancel", []*widget.FormItem{{Text: "Text", Widget: text}},
 						func(ok bool) {
 							if ok {
 								data = []byte(text.Text)
@@ -66,6 +71,9 @@ func DecryptDialog(w fyne.Window) {
 					if data == nil {
 						return
 					}
+					text.SetMinRowsVisible(13)
+					d.Resize(fyne.NewSize(400, 400))
+					d.Show()
 				} else {
 					dialog.ShowFileOpen(func(reader fyne.URIReadCloser, err error) {
 						if err != nil || reader == nil {

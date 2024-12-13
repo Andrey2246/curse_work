@@ -16,17 +16,6 @@ var IPTable = []int{
 	63, 55, 47, 39, 31, 23, 15, 7,
 }
 
-var IPInvTable = []int{
-	40, 8, 48, 16, 56, 24, 64, 32,
-	39, 7, 47, 15, 55, 23, 63, 31,
-	38, 6, 46, 14, 54, 22, 62, 30,
-	37, 5, 45, 13, 53, 21, 61, 29,
-	36, 4, 44, 12, 52, 20, 60, 28,
-	35, 3, 43, 11, 51, 19, 59, 27,
-	34, 2, 42, 10, 50, 18, 58, 26,
-	33, 1, 41, 9, 49, 17, 57, 25,
-}
-
 var ExpansionTable = []int{
 	32, 1, 2, 3, 4, 5,
 	4, 5, 6, 7, 8, 9,
@@ -149,7 +138,7 @@ func RuneToBin(input rune) []int {
 	return result
 }
 
-func addDESPadding(a []byte) []byte {
+func AddDESPadding(a []byte) []byte {
 	prop := byte(len(a) % 8)
 	for i := 0; len(a)%8 != 0; i++ {
 		a = append(a, prop)
@@ -182,7 +171,7 @@ func removeDESPadding(a []byte) []byte {
 	return a[:realSize]
 }
 
-func permute(input []int, table []int) []int {
+func Permute(input []int, table []int) []int {
 	output := make([]int, len(table))
 	for i, position := range table {
 		output[i] = input[position-1]
@@ -190,29 +179,29 @@ func permute(input []int, table []int) []int {
 	return output
 }
 
-func leftShift(input []int, shifts int) []int {
+func LeftShift(input []int, shifts int) []int {
 	return append(input[shifts:], input[:shifts]...)
 }
 
-func generateRoundKeys(key []int) [][]int {
-	permutedKey := permute(key, PC1)
+func GenerateRoundKeys(key []int) [][]int {
+	PermutedKey := Permute(key, PC1)
 
-	left, right := permutedKey[:28], permutedKey[28:]
+	left, right := PermutedKey[:28], PermutedKey[28:]
 
 	roundKeys := make([][]int, 16)
 	for i := 0; i < 16; i++ {
-		left = leftShift(left, LeftShifts[i])
-		right = leftShift(right, LeftShifts[i])
+		left = LeftShift(left, LeftShifts[i])
+		right = LeftShift(right, LeftShifts[i])
 
 		combinedKey := append(left, right...)
-		roundKeys[i] = permute(combinedKey, PC2)
+		roundKeys[i] = Permute(combinedKey, PC2)
 	}
 
 	return roundKeys
 }
 
-func expand(input []int) []int { //расширение части по таблице
-	return permute(input, ExpansionTable)
+func Expand(input []int) []int { //расширение части по таблице
+	return Permute(input, ExpansionTable)
 }
 
 func substitute(input []int) []int { //s-box подстановка
@@ -230,35 +219,38 @@ func substitute(input []int) []int { //s-box подстановка
 	return output
 }
 
-func xor(a, b []int) []int {
+func Xor(a, b []int) []int {
 	result := make([]int, len(a))
 	for i := range a {
-		result[i] = a[i] ^ b[i]
+		if a[i] == 0 && b[i] == 0 || a[i] == 1 && b[i] == 1 {
+			result[i] = 1
+		} else {
+			result[i] = 0
+		}
 	}
 	return result
 }
 
-func feistel(right []int, roundKey []int) []int {
-	expanded := expand(right)
-	xored := xor(expanded, roundKey)
+func Feistel(right []int, roundKey []int) []int {
+	expanded := Expand(right)
+	xored := Xor(expanded, roundKey)
 	substituted := substitute(xored)
-	return permute(substituted, PermutationTable)
+	return Permute(substituted, PermutationTable)
 }
 
 func mainDES(block []int, roundKeys [][]int) []int {
-	permutedBlock := permute(block, IPTable) // начальная перестановка
+	PermutedBlock := Permute(block, IPTable) // начальная перестановка
 
-	left, right := permutedBlock[:32], permutedBlock[32:]
+	left, right := PermutedBlock[:32], PermutedBlock[32:]
 
 	for i := 0; i < 16; i++ {
 		temp := right
-		right = xor(left, feistel(right, roundKeys[i]))
+		right = Xor(left, Feistel(right, roundKeys[i]))
 		left = temp
 	}
 
 	combined := append(right, left...)
-	return permute(combined, FPTable)
-
+	return Permute(combined, FPTable)
 }
 
 func ByteToBinarySlice(b byte) []int {
@@ -295,9 +287,9 @@ func BinSToByteS(bins []int) []byte {
 }
 
 func EncryptDES(plaintext []byte, key string) []byte {
-	text := ByteSToBinS(addDESPadding(plaintext))
+	text := ByteSToBinS(AddDESPadding(plaintext))
 
-	roundkeys := generateRoundKeys(StrToBin(key))
+	roundkeys := GenerateRoundKeys(StrToBin(key))
 
 	cyphertext := make([]int, 0)
 	for i := 0; i < len(text); i += 64 {
@@ -309,7 +301,7 @@ func EncryptDES(plaintext []byte, key string) []byte {
 func DecryptDES(ciphertext []byte, key string) []byte {
 	text := ByteSToBinS(ciphertext)
 
-	roundkeys := generateRoundKeys(StrToBin(key))
+	roundkeys := GenerateRoundKeys(StrToBin(key))
 
 	reversedKeys := make([][]int, 16)
 	for i := 0; i < 16; i++ {
