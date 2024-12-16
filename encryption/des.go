@@ -308,7 +308,7 @@ func DecryptDES(ciphertext []byte, key string) []byte {
 		reversedKeys[i] = roundkeys[15-i]
 	}
 
-	cyphertext := make([]int, 0)
+	cyphertext := make([]int, len(ciphertext))
 	for i := 0; i < len(text); i += 64 {
 		cyphertext = append(cyphertext, mainDES(text[i:i+64], reversedKeys)...)
 	}

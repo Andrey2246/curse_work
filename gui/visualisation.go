@@ -19,6 +19,8 @@ var mainKey string
 var mainText string
 var content *fyne.Container
 
+//var spaceLabel *wigdet.Label
+
 func Initialization(w fyne.Window) {
 	inputText := widget.NewEntry()
 	inputText.SetPlaceHolder("Открытый текст (значение имеют только первые 8 символов)")
@@ -42,11 +44,16 @@ func Initialization(w fyne.Window) {
 		Visualisation(w)
 	})
 
+	exitButton := widget.NewButton("Вернуться на главный экран", func() {
+		MainMenu(w)
+	})
+
 	content := container.NewVBox(
 		widget.NewLabel("DES Step-by-Step Visualization"),
 		inputText,
 		keyEntry,
 		startButton,
+		exitButton,
 	)
 
 	w.SetContent(content)
@@ -180,12 +187,12 @@ func Visualisation(w fyne.Window) {
 	was2Label := widget.NewLabel("")
 	wasLabel := widget.NewLabel("Прошлое состояние данных: ")
 	nowLabel := widget.NewLabel("Текущее состояние данных данных: ")
-	tableLabel := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{})
+	tableLabel := widget.NewLabelWithStyle("", fyne.TextAlignLeading, fyne.TextStyle{})
 	tableLabels := make([]*widget.Label, 0)
-	for i := 0; i < 8; i++ {
+	for i := 0; i < 9; i++ {
 		tableLabels = append(tableLabels, widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{}))
 	}
-
+	tableLabels[0].Alignment = fyne.TextAlignLeading
 	stateLabel := widget.NewLabel("Состояние: ")
 	stateLabels := []*widget.Label{stateLabel}
 	for i := 0; i < 5; i++ {
@@ -269,7 +276,10 @@ func Visualisation(w fyne.Window) {
 	})
 
 	nextButton := widget.NewButton("Следующий шаг", func() {
-		if currentStep[1] != -1 {
+		if currentStep[3] != -1 {
+			currentStep[3] = -1
+			currentStep[2] = -1
+			currentStep[1] = -1
 			updateStepDisplay()
 		} else if currentStep[0] < 4 {
 			currentStep[0]++
@@ -279,6 +289,10 @@ func Visualisation(w fyne.Window) {
 			rNextButton.Enable()
 			rPrevButton.Enable()
 		} else {
+			sBoxNextButton.Disable()
+			fNextButton.Disable()
+			sBoxPrevButton.Disable()
+			fPrevButton.Disable()
 			rNextButton.Disable()
 			rPrevButton.Disable()
 		}
@@ -288,7 +302,10 @@ func Visualisation(w fyne.Window) {
 	})
 
 	prevButton := widget.NewButton("Предыдущий шаг", func() {
-		if currentStep[1] != -1 {
+		if currentStep[3] != -1 {
+			currentStep[3] = -1
+			currentStep[2] = -1
+			currentStep[1] = -1
 			updateStepDisplay()
 		} else if currentStep[0] > 0 {
 			currentStep[0]--
@@ -298,6 +315,10 @@ func Visualisation(w fyne.Window) {
 			rNextButton.Enable()
 			rPrevButton.Enable()
 		} else {
+			sBoxNextButton.Disable()
+			fNextButton.Disable()
+			sBoxPrevButton.Disable()
+			fPrevButton.Disable()
 			rNextButton.Disable()
 			rPrevButton.Disable()
 		}
@@ -319,11 +340,11 @@ func Visualisation(w fyne.Window) {
 	content = container.NewVBox(
 		stepLabel,
 		descriptionLabel,
-		spaceLabel,
 		was2Label,
 		wasLabel,
 		nowLabel,
 		tableLabel,
+		spaceLabel,
 	)
 	for i := 0; i < 8; i++ {
 		content.Add(tableLabels[i])
@@ -348,7 +369,7 @@ func Visualisation(w fyne.Window) {
 
 	w.SetContent(content)
 	w.Resize(fyne.NewSize(800, 600))
-
+	w.CenterOnScreen()
 }
 
 func updateStepDisplay() {
@@ -357,6 +378,7 @@ func updateStepDisplay() {
 	k := currentStep[2]
 	n := currentStep[0]
 	o := content.Objects
+	o[7].(*widget.Label).Alignment = fyne.TextAlignCenter
 	o[0].(*widget.Label).SetText("Шаг: " + strconv.Itoa(n+1) + "." + strconv.Itoa(i+1) + "." + strconv.Itoa(j+1) + "." + strconv.Itoa(k+1))
 	if k != -1 {
 		if k != 8 {
@@ -374,14 +396,16 @@ func updateStepDisplay() {
 			o[5].(*widget.Label).SetText("Подблок №" + fmt.Sprint(k) + ": " + fmt.Sprint(rawStepData[i][3][k][:6]))
 			o[6].(*widget.Label).SetText("Полученный подблок" + fmt.Sprint(rawStepData[i][3][k][6:10]) + "=" + fmt.Sprint(rawStepData[i][3][k][12]))
 			indexL := strings.Index(tables[8+k][rawStepData[i][3][k][10]], fmt.Sprint(rawStepData[i][3][k][12]))
+			o[7].(*widget.Label).Alignment = fyne.TextAlignLeading
+			o[7].(*widget.Label).SetText("S-box №" + fmt.Sprint(k) + ":")
 			for a := 0; a < 4; a++ {
 				st := tables[8+k][a][:indexL] + "->"
 				st += tables[8+k][a][indexL : indexL+rawStepData[i][3][k][12]/10+1]
 				st += "<-" + tables[8+k][a][indexL+rawStepData[i][3][k][12]/10+1:]
 				if a == rawStepData[i][3][k][10] {
-					o[7+a].(*widget.Label).SetText(st)
+					o[8+a].(*widget.Label).SetText(st)
 				} else {
-					o[7+a].(*widget.Label).SetText(tables[8+k][a])
+					o[8+a].(*widget.Label).SetText(tables[8+k][a])
 				}
 
 			}
@@ -391,8 +415,9 @@ func updateStepDisplay() {
 			o[3].(*widget.Label).SetText("")
 			o[4].(*widget.Label).SetText("Блок:" + fmt.Sprint(rawStepData[i][3][0][13:45]))
 			o[5].(*widget.Label).SetText("Блок:" + fmt.Sprint(rawStepData[i][3][0][45:77]))
+			o[6].(*widget.Label).SetText("Таблица перестановки:")
 			for i := 0; i < 8; i++ {
-				o[6+i].(*widget.Label).SetText(tables[3][i])
+				o[7+i].(*widget.Label).SetText(tables[3][i])
 			}
 		}
 	} else if j != -1 {
@@ -402,7 +427,7 @@ func updateStepDisplay() {
 			o[3].(*widget.Label).SetText("")
 			o[4].(*widget.Label).SetText("Блок:" + fmt.Sprint(rawStepData[0][j][0]))
 			o[5].(*widget.Label).SetText("Блок:" + fmt.Sprint(rawStepData[0][j][0][:32]) + " | " + fmt.Sprint(rawStepData[0][j][0][32:]))
-			for i := 0; i < 8; i++ {
+			for i := 0; i < 9; i++ {
 				o[6+i].(*widget.Label).SetText("")
 			}
 		} else if j == 1 {
@@ -410,15 +435,16 @@ func updateStepDisplay() {
 			o[3].(*widget.Label).SetText("")
 			o[4].(*widget.Label).SetText("Блок:" + fmt.Sprint(rawStepData[0][j-1][0][32:]))
 			o[5].(*widget.Label).SetText("Блок:" + fmt.Sprint(rawStepData[0][j][0]))
+			o[6].(*widget.Label).SetText("Таблица расширения:")
 			for i := 0; i < 8; i++ {
-				o[6+i].(*widget.Label).SetText(tables[2][i])
+				o[7+i].(*widget.Label).SetText(tables[2][i])
 			}
 		} else if j == 2 {
 			o[2].(*widget.Label).SetText("") //xor
 			o[4].(*widget.Label).SetText("Ключ: " + fmt.Sprint(rawKeysData[0][1]))
 			o[3].(*widget.Label).SetText("Блок: " + fmt.Sprint(rawStepData[0][j-1][0]))
 			o[5].(*widget.Label).SetText("Блок: " + fmt.Sprint(e.Xor(rawKeysData[0][1], rawStepData[0][j-1][0])))
-			for i := 0; i < 8; i++ {
+			for i := 0; i < 9; i++ {
 				o[6+i].(*widget.Label).SetText("")
 			}
 		} else if j == 3 {
@@ -426,7 +452,7 @@ func updateStepDisplay() {
 			o[3].(*widget.Label).SetText("")
 			o[4].(*widget.Label).SetText("Блок:" + fmt.Sprint(rawStepData[0][j-1][0]))
 			o[5].(*widget.Label).SetText("Блок:" + fmt.Sprint(rawStepData[0][j][0][45:]))
-			for i := 0; i < 8; i++ {
+			for i := 0; i < 9; i++ {
 				o[6+i].(*widget.Label).SetText("")
 			}
 		} else if j == 4 {
@@ -434,7 +460,7 @@ func updateStepDisplay() {
 			o[3].(*widget.Label).SetText("")
 			o[4].(*widget.Label).SetText("Блок:" + fmt.Sprint(rawStepData[0][0][0][32:]) + " | " + fmt.Sprint(rawStepData[0][j][0][:32]))
 			o[5].(*widget.Label).SetText("Блок:" + fmt.Sprint(rawStepData[0][j][0][:32]) + " | " + fmt.Sprint(rawStepData[0][0][0][32:]))
-			for i := 0; i < 8; i++ {
+			for i := 0; i < 9; i++ {
 				o[6+i].(*widget.Label).SetText("")
 			}
 
@@ -446,7 +472,7 @@ func updateStepDisplay() {
 			o[3].(*widget.Label).SetText("Выполняется раунд сети Фейстеля")
 			o[4].(*widget.Label).SetText("Блок:" + fmt.Sprint(rawStepData[16][3][0]))
 			o[5].(*widget.Label).SetText("Блок:" + fmt.Sprint(rawStepData[i][5][0]))
-			for i := 0; i < 8; i++ {
+			for i := 0; i < 9; i++ {
 				o[6+i].(*widget.Label).SetText("")
 			}
 		} else {
@@ -455,7 +481,7 @@ func updateStepDisplay() {
 			o[3].(*widget.Label).SetText("Выполняется раунд сети Фейстеля")
 			o[4].(*widget.Label).SetText("Блок:" + fmt.Sprint(rawStepData[i-1][5][0]))
 			o[5].(*widget.Label).SetText("Блок:" + fmt.Sprint(rawStepData[i][5][0]))
-			for i := 0; i < 8; i++ {
+			for i := 0; i < 9; i++ {
 				o[6+i].(*widget.Label).SetText("")
 			}
 		}
@@ -466,7 +492,7 @@ func updateStepDisplay() {
 			o[3].(*widget.Label).SetText("Блок заполняется байтами, равными числу недостающих байт")
 			o[4].(*widget.Label).SetText("Блок:" + fmt.Sprint(rawStepData[16][0][0]))
 			o[5].(*widget.Label).SetText("Блок:" + fmt.Sprint(rawStepData[16][1][0]))
-			for i := 0; i < 8; i++ {
+			for i := 0; i < 9; i++ {
 				o[6+i].(*widget.Label).SetText("")
 			}
 		}
@@ -474,10 +500,11 @@ func updateStepDisplay() {
 			o[1].(*widget.Label).SetText(helpers[3][0])
 			o[2].(*widget.Label).SetText("") //IP
 			o[3].(*widget.Label).SetText("Начальная перестановка")
-			o[4].(*widget.Label).SetText("Блок:" + fmt.Sprint(rawStepData[16][1][0]))
-			o[5].(*widget.Label).SetText("Блок:" + fmt.Sprint(rawStepData[16][2][0]))
+			o[4].(*widget.Label).SetText("Исходный блок:" + fmt.Sprint(rawStepData[16][1][0]))
+			o[5].(*widget.Label).SetText("Выходной блок:" + fmt.Sprint(rawStepData[16][2][0]))
+			o[6].(*widget.Label).SetText("Таблица начальной перестановки:")
 			for i := 0; i < 8; i++ {
-				o[6+i].(*widget.Label).SetText(tables[1][i])
+				o[7+i].(*widget.Label).SetText(tables[1][i])
 			}
 		}
 		if n == 2 {
@@ -486,7 +513,7 @@ func updateStepDisplay() {
 			o[3].(*widget.Label).SetText("")
 			o[4].(*widget.Label).SetText("Основной Ключ:" + fmt.Sprint(rawStepData[16][3][0]))
 			o[5].(*widget.Label).SetText("")
-			for i := 0; i < 8; i++ {
+			for i := 0; i < 9; i++ {
 				o[6+i].(*widget.Label).SetText("")
 			}
 		}
@@ -496,7 +523,7 @@ func updateStepDisplay() {
 			o[3].(*widget.Label).SetText("")
 			o[4].(*widget.Label).SetText("Исходный Блок:" + fmt.Sprint(rawStepData[16][2][0]))
 			o[5].(*widget.Label).SetText("Выходной Блок:" + fmt.Sprint(rawStepData[15][5][0]))
-			for i := 0; i < 8; i++ {
+			for i := 0; i < 9; i++ {
 				o[6+i].(*widget.Label).SetText("")
 			}
 		}
@@ -506,8 +533,9 @@ func updateStepDisplay() {
 			o[3].(*widget.Label).SetText("")
 			o[4].(*widget.Label).SetText("Исходный Блок:" + fmt.Sprint(rawStepData[15][5][0]))
 			o[5].(*widget.Label).SetText("Выходной Блок:" + fmt.Sprint(rawStepData[16][4][0]))
+			o[6].(*widget.Label).SetText("Таблица конечной перестановки:")
 			for i := 0; i < 8; i++ {
-				o[6+i].(*widget.Label).SetText(tables[6][i])
+				o[7+i].(*widget.Label).SetText(tables[6][i])
 			}
 		}
 	}
@@ -518,6 +546,9 @@ var rawKeysData [17][2][]int   //17 - PC1
 
 func generateSteps(t, k string) {
 	text := e.ByteSToBinS([]byte(t))
+	if len(text) > 64 {
+		text = text[:64]
+	}
 	rawStepData[16][0] = append(rawStepData[16][0], text)
 	text = e.ByteSToBinS(e.AddDESPadding(e.BinSToByteS(text)))
 	rawStepData[16][1] = append(rawStepData[16][1], text)
